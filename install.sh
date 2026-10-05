@@ -1,47 +1,63 @@
-#!/bin/bash
-# Link the fedora command onto PATH, and link each skill into the
-# installed agent harnesses. Safe to re-run. Refuses to replace a real file.
+#!/bin/sh
+# Install fedesk from a checkout, or from a piped download.
+# Safe to re-run. Refuses to replace a real file with a symlink.
 
-set -euo pipefail
+set -eu
 
-root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-skills="$root/skills"
+repo_url=https://github.com/makarkul/fedesk.git
+dest="${FEDESK_HOME:-$HOME/.local/share/fedesk}"
 
-if [[ ! -d $skills || ! -x $root/bin/fedora ]]; then
-  printf 'missing skills or bin/fedora under %s\n' "$root" >&2
-  exit 1
+is_checkout() {
+  [ -n "${1:-}" ] && [ -x "$1/bin/fedora" ] && [ -d "$1/skills" ]
+}
+
+root=""
+if [ -f "$0" ]; then
+  root=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
+  if ! is_checkout "$root"; then
+    root=""
+  fi
 fi
 
-link_command() {
-  local dest="$HOME/.local/bin/fedora"
-  local target="$root/bin/fedora"
-  mkdir -p "$HOME/.local/bin"
-  if [[ -L $dest ]]; then
-    ln -sfn "$target" "$dest"
-  elif [[ -e $dest ]]; then
-    printf 'skip %s (not a symlink)\n' "$dest" >&2
+if [ -z "$root" ]; then
+  command -v git >/dev/null 2>&1 || {
+    printf 'git is required\n' >&2
+    exit 1
+  }
+  if [ ! -d "$dest/.git" ]; then
+    git clone "$repo_url" "$dest"
   else
-    ln -s "$target" "$dest"
+    git -C "$dest" fetch --tags origin
+  fi
+  root=$dest
+  ref="${1:-${FEDESK_REF:-}}"
+  if [ -n "$ref" ]; then
+    git -C "$root" checkout "$ref"
+  fi
+fi
+
+link_one() {
+  dest_path=$1
+  target=$2
+  mkdir -p "$(dirname "$dest_path")"
+  if [ -L "$dest_path" ]; then
+    ln -sfn "$target" "$dest_path"
+  elif [ -e "$dest_path" ]; then
+    printf 'skip %s (not a symlink)\n' "$dest_path" >&2
+  else
+    ln -s "$target" "$dest_path"
   fi
 }
 
 link_into() {
-  local dest_root="$1"
-  local skill name dest target
+  dest_root=$1
+  skill=""
+  name=""
   mkdir -p "$dest_root"
-  for skill in "$skills"/*/; do
-    [[ -d $skill ]] || continue
-    name="${skill%/}"
-    name="${name##*/}"
-    target="$skills/$name"
-    dest="$dest_root/$name"
-    if [[ -L $dest ]]; then
-      ln -sfn "$target" "$dest"
-    elif [[ -e $dest ]]; then
-      printf 'skip %s (not a symlink)\n' "$dest" >&2
-    else
-      ln -s "$target" "$dest"
-    fi
+  for skill in "$root/skills"/*; do
+    [ -d "$skill" ] || continue
+    name=$(basename "$skill")
+    link_one "$dest_root/$name" "$skill"
   done
 }
 
@@ -53,14 +69,15 @@ if command -v codex >/dev/null 2>&1; then
   link_into "$HOME/.codex/skills"
 fi
 
-if command -v grok >/dev/null 2>&1 || [[ -x "$HOME/.grok/bin/grok" ]]; then
+if command -v grok >/dev/null 2>&1 || [ -x "$HOME/.grok/bin/grok" ]; then
   link_into "$HOME/.grok/skills"
 fi
 
 link_into "$HOME/.agents/skills"
 
-if [[ -d "$HOME/.cursor" ]]; then
+if [ -d "$HOME/.cursor" ]; then
   link_into "$HOME/.cursor/skills"
 fi
 
-link_command
+link_one "$HOME/.local/bin/fedora" "$root/bin/fedora"
+printf 'installed %s\n' "$root"

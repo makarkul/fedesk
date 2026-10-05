@@ -23,11 +23,28 @@ The instructions are plain `SKILL.md` files. They do not call an LLM API and the
 
 ## Install
 
-`install.sh` links `fedora` to `~/.local/bin/fedora` and links each skill into the harness directories for tools that are installed here. Re-running it updates the links. It does not copy the files. `~/.local/bin` is already on `PATH`.
-
-```bash
-./install.sh
+```sh
+curl -fsSL https://raw.githubusercontent.com/makarkul/fedesk/main/install.sh | sh
 ```
+
+That clones the repo to `~/.local/share/fedesk` and links `fedora` onto `~/.local/bin`. To install a named version:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/makarkul/fedesk/main/install.sh | sh -s -- v0.1.0
+```
+
+From a checkout, `./install.sh` only refreshes the links for that checkout.
+
+## Version
+
+```sh
+fedora version
+fedora upgrade
+fedora upgrade 0.1.0
+fedora downgrade 0.1.0
+```
+
+`fedora version` prints the fedesk release, then the Fedora and desktop versions. `upgrade` with no version checks out the newest `v*` tag. A version argument checks out that tag, so the same command moves forward or back. `downgrade` requires a version.
 
 Links:
 
@@ -39,4 +56,4 @@ Links:
 
 Grok also reads the Claude and Codex skill directories and keeps a single skill when the name is the same.
 
-The source of truth is `/home/makarand/fedora/skills`. Edit those files. Do not edit the symlinks.
+The source of truth is the checkout `install.sh` printed. Edit those files. Do not edit the symlinks.
