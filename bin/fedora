@@ -1,0 +1,768 @@
+#!/bin/bash
+# fedora — command center for this Fedora machine.
+# Usage: fedora <group> <action> [args...]
+
+set -euo pipefail
+
+die() {
+  printf '%s\n' "$1" >&2
+  exit "${2:-1}"
+}
+
+require_cmd() {
+  command -v "$1" >/dev/null 2>&1 || die "Required command not found: $1"
+}
+
+is_kde() {
+  [[ ${XDG_CURRENT_DESKTOP:-} == *KDE* ]]
+}
+
+require_kde() {
+  if ! is_kde; then
+    die "This command needs a KDE session. Current desktop: ${XDG_CURRENT_DESKTOP:-unknown}"
+  fi
+}
+
+pictures_dir() {
+  local pictures="$HOME/Pictures"
+  local XDG_PICTURES_DIR=""
+
+  if [[ -f $HOME/.config/user-dirs.dirs ]]; then
+    # shellcheck disable=SC1091
+    source "$HOME/.config/user-dirs.dirs"
+    [[ -n ${XDG_PICTURES_DIR:-} ]] && pictures="$XDG_PICTURES_DIR"
+  fi
+  printf '%s\n' "$pictures"
+}
+
+confirm() {
+  local prompt="$1"
+  local reply=""
+
+  if [[ ${FEDORA_YES:-0} == 1 ]]; then
+    return 0
+  fi
+  if [[ ! -t 0 ]]; then
+    printf '%s\nRe-run with --yes to proceed without a prompt.\n' "$prompt" >&2
+    return 1
+  fi
+  read -r -p "$prompt [y/N] " reply
+  [[ $reply == [yY] || $reply == [yY][eE][sS] ]]
+}
+
+reconfigure_kwin() {
+  dbus-send --session --dest=org.kde.KWin --type=method_call /KWin org.kde.KWin.reconfigure
+}
+
+dnf_sudo() {
+  local subcommand="$1"
+  shift
+  local -a yes=()
+  [[ ${FEDORA_YES:-0} == 1 ]] && yes=(-y)
+  sudo dnf "$subcommand" "${yes[@]}" "$@"
+}
+
+pick_name() {
+  local query="$1"
+  local -a all=() exact=() partial=() shown=()
+  local item="" query_lc="${query,,}"
+
+  while IFS= read -r item; do
+    [[ -n $item ]] || continue
+    all+=("$item")
+    if [[ $item == "$query" ]]; then
+      exact+=("$item")
+    elif [[ ${item,,} == *"$query_lc"* ]]; then
+      partial+=("$item")
+    fi
+  done
+
+  if (( ${#exact[@]} == 1 )); then
+    printf '%s\n' "${exact[0]}"
+    return 0
+  fi
+  if (( ${#exact[@]} == 0 && ${#partial[@]} == 1 )); then
+    printf '%s\n' "${partial[0]}"
+    return 0
+  fi
+
+  if (( ${#partial[@]} > 1 )); then
+    shown=("${partial[@]}")
+  else
+    shown=("${all[@]}")
+  fi
+  printf 'No unique match for %s. Choices:\n' "$query" >&2
+  printf '  %s\n' "${shown[@]}" >&2
+  return 1
+}
+
+starred_names() {
+  local line="" name=""
+  while IFS= read -r line; do
+    [[ $line =~ ^[[:space:]]*\*[[:space:]]+(.*) ]] || continue
+    name="${BASH_REMATCH[1]}"
+    name="${name%% (*}"
+    printf '%s\n' "$name"
+  done
+}
+
+declare -a C_GROUP C_NAME C_SUMMARY C_ARGS C_EXAMPLE
+declare -A G_DESC
+
+reg() {
+  C_GROUP+=("$1")
+  C_NAME+=("$2")
+  C_SUMMARY+=("$3")
+  C_ARGS+=("$4")
+  C_EXAMPLE+=("$5")
+}
+
+G_DESC[capture]="Screenshots and screen recording"
+G_DESC[crash]="ABRT problems and core dumps"
+G_DESC[debug]="Read-only machine summary"
+G_DESC[display]="Monitors and layout"
+G_DESC[firewall]="Firewalld status"
+G_DESC[font]="Plasma fonts"
+G_DESC[nightlight]="Night Light"
+G_DESC[pkg]="dnf and Flatpak packages"
+G_DESC[power]="Tuned power profiles"
+G_DESC[selinux]="SELinux mode"
+G_DESC[system]="Session and lock"
+G_DESC[theme]="Plasma themes, colors, and wallpaper"
+G_DESC[update]="Package upgrades"
+G_DESC[version]="Fedora and desktop versions"
+
+reg capture screenshot "Save a screenshot" "[fullscreen|monitor|window|region] [-o file]" "fedora capture screenshot monitor"
+reg capture record "Record the screen with Spectacle" "[screen|region|window]" "fedora capture record screen"
+reg crash status "Show how many ABRT problems are stored" "" "fedora crash status"
+reg crash list "List ABRT problems" "" "fedora crash list"
+reg crash info "Show one ABRT problem" "<id>" "fedora crash info <id>"
+reg crash cores "List systemd core dumps" "" "fedora crash cores"
+reg debug "" "Print session, power, SELinux, firewall, and crash-handler facts" "" "fedora debug"
+reg display list "List monitors" "" "fedora display list"
+reg display set "Apply kscreen-doctor settings in one step" "<output.setting>..." "fedora display set output.eDP-1.enable"
+reg firewall status "Show firewalld state and the default zone" "" "fedora firewall status"
+reg font show "Show the Plasma general and fixed fonts" "" "fedora font show"
+reg font set "Set the Plasma general font" "<font-string>" "fedora font set 'Noto Sans,10,-1,5,50,0,0,0,0,0'"
+reg nightlight status "Show Night Light state" "" "fedora nightlight status"
+reg nightlight on "Turn Night Light on" "" "fedora nightlight on"
+reg nightlight off "Turn Night Light off" "" "fedora nightlight off"
+reg pkg search "Search dnf packages" "<text>" "fedora pkg search vim"
+reg pkg info "Show a dnf package" "<name>" "fedora pkg info vim"
+reg pkg add "Install packages with dnf" "<pkg>..." "fedora pkg add vim"
+reg pkg remove "Remove packages with dnf" "<pkg>..." "fedora pkg remove vim"
+reg pkg flatpak "List Flatpak apps, or search them" "[search <text>]" "fedora pkg flatpak search firefox"
+reg power status "Show the active tuned profile" "" "fedora power status"
+reg power list "List tuned profiles" "" "fedora power list"
+reg power recommend "Show the recommended tuned profile" "" "fedora power recommend"
+reg power set "Switch the tuned profile" "<profile>" "fedora power set balanced"
+reg selinux status "Show the SELinux mode" "" "fedora selinux status"
+reg system lock "Lock the session" "" "fedora system lock"
+reg system session "Show the desktop and session type" "" "fedora system session"
+reg theme list "List Plasma global themes" "" "fedora theme list"
+reg theme set "Apply a Plasma global theme" "<package>" "fedora theme set org.kde.breezedark.desktop"
+reg theme colors "List color schemes, or set one" "[<scheme>]" "fedora theme colors BreezeDark"
+reg theme desktop "List Plasma desktop themes, or set one" "[<theme>]" "fedora theme desktop breeze-dark"
+reg theme wallpaper "Set the wallpaper image" "<file>" "fedora theme wallpaper ~/Pictures/wall.png"
+reg theme accent "Set the accent color" "<name-or-hex>" "fedora theme accent skyblue"
+reg update "" "Upgrade packages with dnf" "[packages...]" "fedora update"
+reg version "" "Show Fedora, Plasma, and kernel versions" "" "fedora version"
+
+usage_of() {
+  local i="$1"
+  local line="fedora ${C_GROUP[$i]}"
+
+  [[ -n ${C_NAME[$i]} ]] && line+=" ${C_NAME[$i]}"
+  [[ -n ${C_ARGS[$i]} ]] && line+=" ${C_ARGS[$i]}"
+  printf '%s' "$line"
+}
+
+command_index() {
+  local group="$1" name="$2" i
+
+  for i in "${!C_GROUP[@]}"; do
+    if [[ ${C_GROUP[$i]} == "$group" && ${C_NAME[$i]} == "$name" ]]; then
+      printf '%s\n' "$i"
+      return 0
+    fi
+  done
+  return 1
+}
+
+group_known() {
+  local group="$1" i
+
+  for i in "${!C_GROUP[@]}"; do
+    [[ ${C_GROUP[$i]} == "$group" ]] && return 0
+  done
+  return 1
+}
+
+group_indexes() {
+  local group="$1" i
+
+  for i in "${!C_GROUP[@]}"; do
+    [[ ${C_GROUP[$i]} == "$group" ]] && printf '%s\n' "$i"
+  done
+}
+
+print_table() {
+  local rows="$1"
+  local max_width=0 width=0 command="" rest=""
+
+  while IFS=$'\t' read -r command rest; do
+    [[ -n $command ]] || continue
+    width=${#command}
+    (( width > max_width )) && max_width=$width
+  done <<<"$rows"
+
+  while IFS=$'\t' read -r command rest; do
+    [[ -n $command ]] || continue
+    printf '  %-*s  %s\n' "$max_width" "$command" "$rest"
+  done <<<"$rows"
+}
+
+show_main_help() {
+  local group=""
+  cat <<'EOF'
+Fedora command center
+
+Usage:
+  fedora <command> [args...]
+  fedora --ask "Turn Night Light off"
+  fedora commands [--json]
+  fedora <group>
+  fedora <group> <action> --help
+
+Common commands:
+  fedora theme list              List Plasma global themes
+  fedora theme set <package>     Apply a global theme
+  fedora capture screenshot      Save a screenshot
+  fedora display list            List monitors
+  fedora power status            Show the tuned profile
+  fedora update                  Upgrade packages
+  fedora system lock             Lock the session
+
+Groups:
+EOF
+  for group in $(printf '%s\n' "${!G_DESC[@]}" | sort); do
+    printf '  %-14s %s\n' "$group" "${G_DESC[$group]}"
+  done
+  cat <<'EOF'
+
+Discovery:
+  fedora commands            List all commands
+  fedora commands --json     Machine-readable command list
+
+--yes skips the confirmation prompt on theme set and power set, and passes
+-y to dnf for pkg add, pkg remove, and update.
+
+English:
+  fedora --ask "Turn Night Light off"
+  fedora -a "Lock the screen"
+  The model comes from FEDORA_PROVIDER or ~/.config/fedora/agent.conf.
+  fedora does not store an API key. Run 'fedora --ask --help'.
+EOF
+}
+
+show_group_help() {
+  local group="$1"
+  local i="" rows=""
+
+  printf '%s — %s\n' "$group" "${G_DESC[$group]:-commands}"
+  while IFS= read -r i; do
+    [[ -n $i ]] || continue
+    rows+="$(usage_of "$i")"$'\t'"${C_SUMMARY[$i]}"$'\n'
+  done < <(group_indexes "$group")
+  rows="$(printf '%s' "$rows" | sort)"
+  print_table "$rows"
+}
+
+show_command_help() {
+  local group="$1" name="$2"
+  local i example
+
+  i="$(command_index "$group" "$name")"
+  printf 'Usage:\n  %s\n\n%s\n' "$(usage_of "$i")" "${C_SUMMARY[$i]}"
+  if [[ -n ${C_EXAMPLE[$i]} ]]; then
+    printf '\nExample:\n'
+    while IFS='|' read -r example; do
+      example="${example# }"
+      example="${example% }"
+      [[ -n $example ]] && printf '  %s\n' "$example"
+    done <<<"${C_EXAMPLE[$i]}"
+  fi
+}
+
+show_commands() {
+  local i="" rows=""
+
+  echo "Fedora commands:"
+  while IFS= read -r i; do
+    [[ -n $i ]] || continue
+    rows+="$(usage_of "$i")"$'\t'"${C_SUMMARY[$i]}"$'\n'
+  done < <(printf '%s\n' "${!C_GROUP[@]}" | while IFS= read -r i; do printf '%s\t%s\n' "$(usage_of "$i")" "$i"; done | sort | cut -f2-)
+  print_table "$rows"
+}
+
+show_commands_json() {
+  local i=""
+  for i in "${!C_GROUP[@]}"; do
+    printf '%s\t%s\t%s\t%s\n' "${C_GROUP[$i]}" "${C_NAME[$i]}" "${C_SUMMARY[$i]}" "$(usage_of "$i")"
+  done | python3 -c '
+import json, sys
+commands = []
+for line in sys.stdin:
+    group, name, summary, usage = line.rstrip("\n").split("\t")
+    commands.append({"group": group, "name": name, "summary": summary, "usage": usage})
+commands.sort(key=lambda item: item["usage"])
+json.dump({"ok": True, "commands": commands}, sys.stdout, indent=2)
+sys.stdout.write("\n")
+'
+}
+
+has_help() {
+  local token=""
+  for token in "$@"; do
+    [[ $token == -- ]] && return 1
+    [[ $token == --help || $token == -h ]] && return 0
+  done
+  return 1
+}
+
+suggest_group() {
+  local query="$1" group=""
+  for group in $(printf '%s\n' "${!G_DESC[@]}" | sort); do
+    [[ $group == "$query"* ]] && printf '%s\n' "$group" && return 0
+  done
+  return 1
+}
+
+unknown_command() {
+  local suggestion=""
+  printf 'Unknown fedora command: fedora %s\n' "$*" >&2
+  suggestion="$(suggest_group "${1:-}")" || true
+  [[ -n $suggestion ]] && printf 'Did you mean: fedora %s ?\n' "$suggestion" >&2
+  printf "Run 'fedora commands' to list commands.\n" >&2
+  exit 127
+}
+
+run_command() {
+  local group="$1" name="$2"
+  shift 2
+  local fn="cmd_${group}"
+  [[ -n $name ]] && fn="${fn}_${name}"
+  if ! declare -F "$fn" >/dev/null; then
+    die "Command is registered but not implemented: $fn"
+  fi
+  "$fn" "$@"
+}
+
+cmd_capture_screenshot() {
+  require_kde
+  require_cmd spectacle
+  local mode="fullscreen" output="" dir=""
+  while (( $# > 0 )); do
+    case "$1" in
+    fullscreen | monitor | window | region)
+      mode="$1"
+      ;;
+    -o | --output)
+      shift
+      (( $# > 0 )) || die "Missing file after -o"
+      output="$1"
+      ;;
+    *)
+      die "Unknown argument: $1"
+      ;;
+    esac
+    shift
+  done
+
+  local flag="-f"
+  case "$mode" in
+  fullscreen) flag="-f" ;;
+  monitor) flag="-m" ;;
+  window) flag="-a" ;;
+  region) flag="-r" ;;
+  esac
+
+  if [[ -z $output ]]; then
+    dir="$(pictures_dir)"
+    mkdir -p "$dir"
+    output="$dir/fedora-$(date +%Y%m%d-%H%M%S).png"
+  else
+    mkdir -p "$(dirname -- "$output")"
+  fi
+  spectacle -b -n "$flag" -o "$output"
+  printf '%s\n' "$output"
+}
+
+cmd_capture_record() {
+  require_kde
+  require_cmd spectacle
+  local mode="${1:-screen}" flag="s"
+  case "$mode" in
+  screen | s) flag="s" ;;
+  region | r) flag="r" ;;
+  window | w) flag="w" ;;
+  *) die "Usage: fedora capture record [screen|region|window]" ;;
+  esac
+  exec spectacle -R "$flag"
+}
+
+cmd_crash_status() {
+  require_cmd abrt-cli
+  abrt-cli status
+}
+
+cmd_crash_list() {
+  require_cmd abrt-cli
+  abrt-cli list
+}
+
+cmd_crash_info() {
+  require_cmd abrt-cli
+  local id="${1:-}"
+  [[ -n $id ]] || die "Usage: fedora crash info <id>"
+  abrt-cli info "$id"
+}
+
+cmd_crash_cores() {
+  require_cmd coredumpctl
+  coredumpctl list
+}
+
+cmd_debug() {
+  cmd_version
+  printf '\n'
+  cmd_system_session
+  printf '\ncore_pattern: %s\n' "$(cat /proc/sys/kernel/core_pattern)"
+  cmd_selinux_status
+  cmd_power_status || true
+  cmd_firewall_status || true
+  if is_kde; then
+    printf '\n'
+    cmd_nightlight_status || true
+  fi
+}
+
+cmd_display_list() {
+  require_kde
+  require_cmd kscreen-doctor
+  kscreen-doctor -o
+}
+
+cmd_display_set() {
+  require_kde
+  require_cmd kscreen-doctor
+  (( $# > 0 )) || die "Usage: fedora display set <output.setting>..."
+  kscreen-doctor "$@"
+}
+
+cmd_firewall_status() {
+  require_cmd firewall-cmd
+  firewall-cmd --state
+  firewall-cmd --list-all
+}
+
+cmd_font_show() {
+  require_kde
+  require_cmd kreadconfig6
+  printf 'font:  %s\n' "$(kreadconfig6 --file kdeglobals --group General --key font)"
+  printf 'fixed: %s\n' "$(kreadconfig6 --file kdeglobals --group General --key fixed)"
+}
+
+cmd_font_set() {
+  require_kde
+  require_cmd kwriteconfig6
+  local value="${1:-}"
+  [[ -n $value ]] || die "Usage: fedora font set <font-string>"
+  kwriteconfig6 --file kdeglobals --group General --key font "$value"
+  cmd_font_show
+}
+
+cmd_nightlight_status() {
+  require_kde
+  require_cmd kreadconfig6
+  local active=""
+  active="$(kreadconfig6 --file kwinrc --group NightColor --key Active || true)"
+  printf 'config: %s\n' "${active:-unset}"
+  busctl --user get-property org.kde.KWin.NightLight /org/kde/KWin/NightLight org.kde.KWin.NightLight enabled || true
+  busctl --user get-property org.kde.KWin.NightLight /org/kde/KWin/NightLight org.kde.KWin.NightLight running || true
+}
+
+cmd_nightlight_on() {
+  cmd_nightlight_write true
+}
+
+cmd_nightlight_off() {
+  cmd_nightlight_write false
+}
+
+cmd_nightlight_write() {
+  require_kde
+  require_cmd kwriteconfig6
+  kwriteconfig6 --file kwinrc --group NightColor --key Active "$1"
+  reconfigure_kwin
+  printf 'Night Light Active=%s\n' "$1"
+}
+
+cmd_pkg_search() {
+  require_cmd dnf
+  (( $# > 0 )) || die "Usage: fedora pkg search <text>"
+  dnf search "$@"
+}
+
+cmd_pkg_info() {
+  require_cmd dnf
+  (( $# > 0 )) || die "Usage: fedora pkg info <name>"
+  dnf info "$@"
+}
+
+cmd_pkg_add() {
+  require_cmd dnf
+  (( $# > 0 )) || die "Usage: fedora pkg add <pkg>..."
+  dnf_sudo install "$@"
+}
+
+cmd_pkg_remove() {
+  require_cmd dnf
+  (( $# > 0 )) || die "Usage: fedora pkg remove <pkg>..."
+  dnf_sudo remove "$@"
+}
+
+cmd_pkg_flatpak() {
+  require_cmd flatpak
+  if [[ ${1:-} == search ]]; then
+    shift
+    (( $# > 0 )) || die "Usage: fedora pkg flatpak search <text>"
+    flatpak search "$@"
+  elif (( $# == 0 )); then
+    flatpak list
+  else
+    die "Usage: fedora pkg flatpak [search <text>]"
+  fi
+}
+
+cmd_power_status() {
+  require_cmd tuned-adm
+  tuned-adm active
+}
+
+cmd_power_list() {
+  require_cmd tuned-adm
+  tuned-adm list
+}
+
+cmd_power_recommend() {
+  require_cmd tuned-adm
+  tuned-adm recommend
+}
+
+cmd_power_set() {
+  require_cmd tuned-adm
+  local profile="${1:-}"
+  [[ -n $profile ]] || die "Usage: fedora power set <profile>"
+  confirm "Switch the tuned profile to $profile?" || die "Cancelled."
+  sudo tuned-adm profile "$profile"
+}
+
+cmd_selinux_status() {
+  require_cmd getenforce
+  getenforce
+}
+
+cmd_system_lock() {
+  require_cmd loginctl
+  loginctl lock-session
+}
+
+cmd_system_session() {
+  printf 'desktop: %s\n' "${XDG_CURRENT_DESKTOP:-unknown}"
+  printf 'session: %s\n' "${XDG_SESSION_TYPE:-unknown}"
+  printf 'desktop_session: %s\n' "${DESKTOP_SESSION:-unknown}"
+}
+
+cmd_theme_list() {
+  require_kde
+  require_cmd plasma-apply-lookandfeel
+  plasma-apply-lookandfeel --list
+}
+
+cmd_theme_set() {
+  require_kde
+  require_cmd plasma-apply-lookandfeel
+  local query="${1:-}" name=""
+  [[ -n $query ]] || die "Usage: fedora theme set <package>"
+  [[ -z ${2:-} ]] || die "Unexpected argument: $2"
+  name="$(plasma-apply-lookandfeel --list | pick_name "$query")" || exit 1
+  confirm "Apply global theme $name? This can change panels and widgets." || die "Cancelled."
+  plasma-apply-lookandfeel --apply "$name"
+}
+
+cmd_theme_colors() {
+  require_kde
+  require_cmd plasma-apply-colorscheme
+  if (( $# == 0 )); then
+    plasma-apply-colorscheme --list-schemes
+    return
+  fi
+  local name=""
+  name="$(plasma-apply-colorscheme --list-schemes | starred_names | pick_name "$1")" || exit 1
+  plasma-apply-colorscheme "$name"
+}
+
+cmd_theme_desktop() {
+  require_kde
+  require_cmd plasma-apply-desktoptheme
+  if (( $# == 0 )); then
+    plasma-apply-desktoptheme --list-themes
+    return
+  fi
+  local name=""
+  name="$(plasma-apply-desktoptheme --list-themes | starred_names | pick_name "$1")" || exit 1
+  plasma-apply-desktoptheme "$name"
+}
+
+cmd_theme_wallpaper() {
+  require_kde
+  require_cmd plasma-apply-wallpaperimage
+  local file="${1:-}"
+  [[ -n $file ]] || die "Usage: fedora theme wallpaper <file>"
+  [[ -f $file ]] || die "Not a file: $file"
+  plasma-apply-wallpaperimage "$file"
+}
+
+cmd_theme_accent() {
+  require_kde
+  require_cmd plasma-apply-colorscheme
+  local color="${1:-}"
+  [[ -n $color ]] || die "Usage: fedora theme accent <name-or-hex>"
+  plasma-apply-colorscheme --accent-color "$color"
+}
+
+cmd_update() {
+  require_cmd dnf
+  dnf_sudo upgrade "$@"
+}
+
+cmd_version() {
+  local pretty="" key="" value=""
+  if [[ -r /etc/os-release ]]; then
+    while IFS='=' read -r key value; do
+      if [[ $key == PRETTY_NAME ]]; then
+        pretty="${value//\"/}"
+      fi
+    done </etc/os-release
+  fi
+  printf '%s\n' "${pretty:-Fedora}"
+  command -v plasmashell >/dev/null 2>&1 && plasmashell --version
+  uname -sr
+}
+
+fedora_bin_dir() {
+  local source="${BASH_SOURCE[0]}"
+  local dir=""
+  while [[ -L $source ]]; do
+    dir="$(cd "$(dirname "$source")" && pwd)"
+    source="$(readlink "$source")"
+    [[ $source != /* ]] && source="$dir/$source"
+  done
+  cd "$(dirname "$source")" && pwd
+}
+
+run_ask() {
+  local bin_dir=""
+  bin_dir="$(fedora_bin_dir)"
+  [[ -f $bin_dir/ask.py ]] || die "Missing $bin_dir/ask.py"
+  exec python3 "$bin_dir/ask.py" "$@"
+}
+
+main() {
+  local -a ARGS=()
+  local arg="" group="" name="" suggestion=""
+  FEDORA_YES=0
+
+  for arg in "$@"; do
+    if [[ $arg == --yes ]]; then
+      FEDORA_YES=1
+    else
+      ARGS+=("$arg")
+    fi
+  done
+  export FEDORA_YES
+
+  if (( ${#ARGS[@]} > 0 )) && [[ ${ARGS[0]} == --ask || ${ARGS[0]} == -a ]]; then
+    run_ask "${ARGS[@]:1}"
+  fi
+
+  if (( ${#ARGS[@]} == 0 )) || [[ ${ARGS[0]} == --help || ${ARGS[0]} == -h || ${ARGS[0]} == help ]]; then
+    show_main_help
+    return 0
+  fi
+
+  if [[ ${ARGS[0]} == commands ]]; then
+    if (( ${#ARGS[@]} > 1 )); then
+      case "${ARGS[1]}" in
+      --json)
+        show_commands_json
+        ;;
+      --help | -h)
+        printf 'Usage:\n  fedora commands [--json]\n'
+        ;;
+      *)
+        die "Unknown option for fedora commands: ${ARGS[1]}"
+        ;;
+      esac
+    else
+      show_commands
+    fi
+    return 0
+  fi
+
+  group="${ARGS[0]}"
+  if ! group_known "$group"; then
+    unknown_command "${ARGS[@]}"
+  fi
+
+  if command_index "$group" "" >/dev/null; then
+    if (( ${#ARGS[@]} >= 2 )) && has_help "${ARGS[@]:1}"; then
+      show_command_help "$group" ""
+      return 0
+    fi
+    if (( ${#ARGS[@]} == 1 )); then
+      run_command "$group" ""
+    else
+      run_command "$group" "" "${ARGS[@]:1}"
+    fi
+    return 0
+  fi
+
+  if (( ${#ARGS[@]} == 1 )) || [[ ${ARGS[1]} == --help || ${ARGS[1]} == -h ]]; then
+    show_group_help "$group"
+    return 0
+  fi
+
+  name="${ARGS[1]}"
+  if ! command_index "$group" "$name" >/dev/null; then
+    suggestion="$(suggest_group "$name")" || true
+    printf 'Unknown fedora command: fedora %s %s\n' "$group" "$name" >&2
+    [[ -n $suggestion ]] && printf 'Did you mean: fedora %s ?\n' "$suggestion" >&2
+    printf "Run 'fedora %s' to list commands in this group.\n" "$group" >&2
+    exit 127
+  fi
+
+  if (( ${#ARGS[@]} >= 3 )) && has_help "${ARGS[@]:2}"; then
+    show_command_help "$group" "$name"
+    return 0
+  fi
+
+  if (( ${#ARGS[@]} == 2 )); then
+    run_command "$group" "$name"
+  else
+    run_command "$group" "$name" "${ARGS[@]:2}"
+  fi
+}
+
+main "$@"

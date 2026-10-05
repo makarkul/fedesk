@@ -1,0 +1,14 @@
+# Copy to ~/.config/fedora/agent.conf and edit.
+# Do not put an API key in this file. fedora ignores key= lines.
+# A cloud HTTP provider reads FEDORA_API_KEY from the environment.
+
+# provider=auto
+# provider=ollama
+# provider=grok
+# provider=claude
+# provider=codex
+# provider=openai
+
+# model=llama3.1
+# base=http://127.0.0.1:11434/v1
+# base=https://api.openai.com/v1
