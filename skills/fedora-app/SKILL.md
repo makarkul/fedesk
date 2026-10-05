@@ -9,7 +9,7 @@ description: >
 
 # A desktop app on Fedora
 
-Safety rules for `sudo`, `dnf`, and secrets are in the `fedora` skill. Do not copy Omarchy's Qt layout, `~/Work/<name>` rule, or PKGBUILD.
+Safety rules for `sudo`, `dnf`, and secrets are in the `fedesk` skill. Do not copy Omarchy's Qt layout, `~/Work/<name>` rule, or PKGBUILD.
 
 ## Settle the app
 

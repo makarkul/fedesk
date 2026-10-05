@@ -9,7 +9,7 @@ description: >
 
 # Diagnosing a crash
 
-Work from evidence. Safety rules for any system change are in the `fedora` skill. Diagnosis reads. It does not tune, update, or reconfigure unless the user asks.
+Work from evidence. Safety rules for any system change are in the `fedesk` skill. Diagnosis reads. It does not tune, update, or reconfigure unless the user asks.
 
 ## Where the core went
 
@@ -22,14 +22,14 @@ cat /proc/sys/kernel/core_pattern
 On this machine the pattern pipes to `systemd-coredump`, and `coredumpctl` is installed (from the `systemd-udev` package, not a package named `systemd-coredump`). ABRT is also installed (`abrt-cli`, `abrt-addon-ccpp`) and keeps its own problem list. Use both. If `core_pattern` no longer names `systemd-coredump`, say so and follow the handler that is actually configured.
 
 ```bash
-fedora crash status
-fedora crash list
-fedora crash info <id>
-fedora crash cores
+fedesk crash status
+fedesk crash list
+fedesk crash info <id>
+fedesk crash cores
 coredumpctl info <pid>
 ```
 
-`fedora crash` is the list and the summary. `coredumpctl info` is still the command-line and signal detail for one dump.
+`fedesk crash` is the list and the summary. `coredumpctl info` is still the command-line and signal detail for one dump.
 
 `abrt-cli list` can be long. Match the program and the time. Do not report the whole backlog.
 

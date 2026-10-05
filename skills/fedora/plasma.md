@@ -8,7 +8,7 @@ Plasma on this machine is 6.7.5. There is no `qdbus6`. Read live properties with
 dbus-send --session --dest=org.kde.KWin --type=method_call /KWin org.kde.KWin.reconfigure
 ```
 
-`fedora nightlight` and `fedora theme` already do this. Do not use `busctl call` for `reconfigure`; that method does not send a reply.
+`fedesk nightlight` and `fedesk theme` already do this. Do not use `busctl call` for `reconfigure`; that method does not send a reply.
 
 Restarting `plasmashell` or the session needs a yes. It drops the current desktop arrangement.
 
@@ -32,11 +32,11 @@ Global shortcuts live in `~/.config/kglobalshortcutsrc`. A value is `current,def
 ## Displays
 
 ```bash
-fedora display list
-fedora display set output.HDMI-2.position.1920,0 output.eDP-1.position.0,0
+fedesk display list
+fedesk display set output.HDMI-2.position.1920,0 output.eDP-1.position.0,0
 ```
 
-`display set` forwards every argument to one `kscreen-doctor` invocation, so the layout changes atomically. Read `kscreen-doctor --help` for mode, rotation, HDR, and scale. Use an output name from `fedora display list`, not a guessed `HDMI-1`.
+`display set` forwards every argument to one `kscreen-doctor` invocation, so the layout changes atomically. Read `kscreen-doctor --help` for mode, rotation, HDR, and scale. Use an output name from `fedesk display list`, not a guessed `HDMI-1`.
 
 ## Panels and widgets
 
@@ -47,9 +47,9 @@ Editing that file requires a backup and a yes. Do not replace the file with a st
 ## Night Light
 
 ```bash
-fedora nightlight status
-fedora nightlight on
-fedora nightlight off
+fedesk nightlight status
+fedesk nightlight on
+fedesk nightlight off
 ```
 
 Do not assume it is on. `status` reads `kwinrc` and the live KWin property. Schedule and temperature stay in the `[NightColor]` group. Read those keys before writing them. `on` and `off` only change `Active`.
@@ -59,21 +59,21 @@ Do not assume it is on. `status` reads `kwinrc` and the live KWin property. Sche
 List, then apply. The argument is a name from the list, not a theme you remember from another distro.
 
 ```bash
-fedora theme list
-fedora theme set <package>
-fedora theme colors [scheme]
-fedora theme desktop [theme]
-fedora theme wallpaper <file>
-fedora theme accent <name-or-hex>
-fedora font show
-fedora font set <font-string>
+fedesk theme list
+fedesk theme set <package>
+fedesk theme colors [scheme]
+fedesk theme desktop [theme]
+fedesk theme wallpaper <file>
+fedesk theme accent <name-or-hex>
+fedesk font show
+fedesk font set <font-string>
 ```
 
-`fedora theme set` asks before it applies a global theme, because that can change panels and widgets. Do not pass `--yes` unless the user already agreed. A partial name is accepted only when it matches one theme.
+`fedesk theme set` asks before it applies a global theme, because that can change panels and widgets. Do not pass `--yes` unless the user already agreed. A partial name is accepted only when it matches one theme.
 
-`font set` writes the raw Plasma font string. Read `fedora font show` first and keep the same comma-separated shape.
+`font set` writes the raw Plasma font string. Read `fedesk font show` first and keep the same comma-separated shape.
 
-Extra Plasma packages (themes, plasmoids) install with `kpackagetool6`. Read `--help` for the package type flag. There is no `fedora` command for that.
+Extra Plasma packages (themes, plasmoids) install with `kpackagetool6`. Read `--help` for the package type flag. There is no `fedesk` command for that.
 
 ## Terminals
 
@@ -90,11 +90,11 @@ A new Konsole window reads the profile. An existing window keeps the old colors 
 ## Screenshots and recording
 
 ```bash
-fedora capture screenshot
-fedora capture screenshot monitor
-fedora capture screenshot window
-fedora capture screenshot region -o ~/Pictures/shot.png
-fedora capture record screen
+fedesk capture screenshot
+fedesk capture screenshot monitor
+fedesk capture screenshot window
+fedesk capture screenshot region -o ~/Pictures/shot.png
+fedesk capture record screen
 ```
 
-The default screenshot is the whole desktop, saved under Pictures. `region` and `record` are interactive. `grim` is not installed. KSnip is for editing a shot after it exists, not for taking the first one. Read `fedora capture screenshot --help` before reaching for `spectacle` flags such as delay or pointer.
+The default screenshot is the whole desktop, saved under Pictures. `region` and `record` are interactive. `grim` is not installed. KSnip is for editing a shot after it exists, not for taking the first one. Read `fedesk capture screenshot --help` before reaching for `spectacle` flags such as delay or pointer.

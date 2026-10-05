@@ -8,7 +8,7 @@ repo_url=https://github.com/makarkul/fedesk.git
 dest="${FEDESK_HOME:-$HOME/.local/share/fedesk}"
 
 is_checkout() {
-  [ -n "${1:-}" ] && [ -x "$1/bin/fedora" ] && [ -d "$1/skills" ]
+  [ -n "${1:-}" ] && [ -x "$1/bin/fedesk" ] && [ -d "$1/skills" ]
 }
 
 root=""
@@ -79,5 +79,12 @@ if [ -d "$HOME/.cursor" ]; then
   link_into "$HOME/.cursor/skills"
 fi
 
-link_one "$HOME/.local/bin/fedora" "$root/bin/fedora"
+link_one "$HOME/.local/bin/fedesk" "$root/bin/fedesk"
+old="$HOME/.local/bin/fedora"
+if [ -L "$old" ]; then
+  current=$(readlink "$old")
+  case "$current" in
+    */bin/fedora|*/bin/fedesk) rm -f "$old" ;;
+  esac
+fi
 printf 'installed %s\n' "$root"

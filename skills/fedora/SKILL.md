@@ -12,22 +12,22 @@ description: >
 
 Manage this Fedora 44 Workstation. One skill covers every desktop. Read the session, then open one topic file.
 
-Do not run `omarchy`. This machine's command is `fedora`. There is no Hyprland and no `/usr/share/omarchy`.
+Do not run `omarchy`. This machine's command is `fedesk`. There is no Hyprland and no `/usr/share/omarchy`.
 
 ## Command
 
-`fedora` is the supported way to change the machine. Discover the live commands instead of guessing flags:
+`fedesk` is the supported way to change the machine. Discover the live commands instead of guessing flags:
 
 ```bash
-fedora
-fedora commands
-fedora <group>
-fedora <group> <action> --help
+fedesk
+fedesk commands
+fedesk <group>
+fedesk <group> <action> --help
 ```
 
-Use `dnf`, `kscreen-doctor`, `kwriteconfig6`, or `gsettings` only when no `fedora` command covers the change. Shortcuts, panels, autostart, and GNOME keys are in that second group.
+Use `dnf`, `kscreen-doctor`, `kwriteconfig6`, or `gsettings` only when no `fedesk` command covers the change. Shortcuts, panels, autostart, and GNOME keys are in that second group.
 
-`--yes` skips the confirmation on `fedora theme set` and `fedora power set`, and passes `-y` to dnf. Do not add `--yes` unless the user already agreed to that exact change.
+`--yes` skips the confirmation on `fedesk theme set` and `fedesk power set`, and passes `-y` to dnf. Do not add `--yes` unless the user already agreed to that exact change.
 
 ## Dispatch
 
@@ -54,34 +54,34 @@ The verified session is Plasma 6.7.5 on X11 (`plasmax11`). GNOME is installed an
 ## Packages
 
 ```bash
-fedora pkg search <text>
-fedora pkg info <name>
-fedora pkg add <pkg>...
-fedora pkg remove <pkg>...
-fedora pkg flatpak
-fedora update
+fedesk pkg search <text>
+fedesk pkg info <name>
+fedesk pkg add <pkg>...
+fedesk pkg remove <pkg>...
+fedesk pkg flatpak
+fedesk update
 ```
 
-`dnf` is dnf5 and asks before it changes packages. `fedora update` with no package names upgrades the system. Flatpak names come from `fedora pkg flatpak search`.
+`dnf` is dnf5 and asks before it changes packages. `fedesk update` with no package names upgrades the system. Flatpak names come from `fedesk pkg flatpak search`.
 
 ## Power
 
 `power-profiles-daemon` is not installed. `tuned` is.
 
 ```bash
-fedora power status
-fedora power list
-fedora power recommend
-fedora power set <profile>
+fedesk power status
+fedesk power list
+fedesk power recommend
+fedesk power set <profile>
 ```
 
-`power set` asks before it switches. Battery and lid behavior stay in `~/.config/powermanagementprofilesrc`. Read that file before editing it. There is no `fedora` command for it.
+`power set` asks before it switches. Battery and lid behavior stay in `~/.config/powermanagementprofilesrc`. Read that file before editing it. There is no `fedesk` command for it.
 
 ## SELinux and firewall
 
 ```bash
-fedora selinux status
-fedora firewall status
+fedesk selinux status
+fedesk firewall status
 ```
 
 The command does not change either one. Do not set SELinux permissive to make a problem go away. A firewall change that should survive reboot uses `firewall-cmd --permanent` and a reload, and needs a yes first.
@@ -89,17 +89,17 @@ The command does not change either one. Do not set SELinux permissive to make a 
 ## Lock and autostart
 
 ```bash
-fedora system lock
-fedora system session
+fedesk system lock
+fedesk system session
 ```
 
-Autostart entries are `~/.config/autostart/*.desktop`. A user service is `systemctl --user enable --now <unit>`. List what is already running with `systemctl --user --type=service --state=running` before adding another copy. There is no `fedora` command for autostart.
+Autostart entries are `~/.config/autostart/*.desktop`. A user service is `systemctl --user enable --now <unit>`. List what is already running with `systemctl --user --type=service --state=running` before adding another copy. There is no `fedesk` command for autostart.
 
 ## English
 
-A person at a terminal can run `fedora --ask "Turn Night Light off"` or `fedora -a "..."`. That flag sends the sentence to the provider named by `FEDORA_PROVIDER` or `~/.config/fedora/agent.conf`. You are already the model when this skill is loaded. Do not call `fedora --ask`. Run the `fedora` command.
+A person at a terminal can run `fedesk --ask "Turn Night Light off"` or `fedesk -a "..."`. That flag sends the sentence to the provider named by `FEDORA_PROVIDER` or `~/.config/fedora/agent.conf`. You are already the model when this skill is loaded. Do not call `fedesk --ask`. Run the `fedesk` command.
 
-Do not put an API key in this tree. `fedora --ask` reads `FEDORA_API_KEY` from the environment only for a non-local HTTP provider.
+Do not put an API key in this tree. `fedesk --ask` reads `FEDORA_API_KEY` from the environment only for a non-local HTTP provider.
 
 ## Out of scope
 

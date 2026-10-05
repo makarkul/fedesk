@@ -1,6 +1,6 @@
 #!/bin/bash
-# fedora — command center for this Fedora machine.
-# Usage: fedora <group> <action> [args...]
+# fedesk — command center for this Fedora machine.
+# Usage: fedesk <group> <action> [args...]
 
 set -euo pipefail
 
@@ -134,47 +134,47 @@ G_DESC[update]="Package upgrades"
 G_DESC[upgrade]="Move fedesk to the latest or a named version"
 G_DESC[version]="fedesk version, plus Fedora and desktop versions"
 
-reg capture screenshot "Save a screenshot" "[fullscreen|monitor|window|region] [-o file]" "fedora capture screenshot monitor"
-reg capture record "Record the screen with Spectacle" "[screen|region|window]" "fedora capture record screen"
-reg crash status "Show how many ABRT problems are stored" "" "fedora crash status"
-reg crash list "List ABRT problems" "" "fedora crash list"
-reg crash info "Show one ABRT problem" "<id>" "fedora crash info <id>"
-reg crash cores "List systemd core dumps" "" "fedora crash cores"
-reg debug "" "Print session, power, SELinux, firewall, and crash-handler facts" "" "fedora debug"
-reg display list "List monitors" "" "fedora display list"
-reg display set "Apply kscreen-doctor settings in one step" "<output.setting>..." "fedora display set output.eDP-1.enable"
-reg firewall status "Show firewalld state and the default zone" "" "fedora firewall status"
-reg font show "Show the Plasma general and fixed fonts" "" "fedora font show"
-reg font set "Set the Plasma general font" "<font-string>" "fedora font set 'Noto Sans,10,-1,5,50,0,0,0,0,0'"
-reg nightlight status "Show Night Light state" "" "fedora nightlight status"
-reg nightlight on "Turn Night Light on" "" "fedora nightlight on"
-reg nightlight off "Turn Night Light off" "" "fedora nightlight off"
-reg pkg search "Search dnf packages" "<text>" "fedora pkg search vim"
-reg pkg info "Show a dnf package" "<name>" "fedora pkg info vim"
-reg pkg add "Install packages with dnf" "<pkg>..." "fedora pkg add vim"
-reg pkg remove "Remove packages with dnf" "<pkg>..." "fedora pkg remove vim"
-reg pkg flatpak "List Flatpak apps, or search them" "[search <text>]" "fedora pkg flatpak search firefox"
-reg power status "Show the active tuned profile" "" "fedora power status"
-reg power list "List tuned profiles" "" "fedora power list"
-reg power recommend "Show the recommended tuned profile" "" "fedora power recommend"
-reg power set "Switch the tuned profile" "<profile>" "fedora power set balanced"
-reg selinux status "Show the SELinux mode" "" "fedora selinux status"
-reg system lock "Lock the session" "" "fedora system lock"
-reg system session "Show the desktop and session type" "" "fedora system session"
-reg theme list "List Plasma global themes" "" "fedora theme list"
-reg theme set "Apply a Plasma global theme" "<package>" "fedora theme set org.kde.breezedark.desktop"
-reg theme colors "List color schemes, or set one" "[<scheme>]" "fedora theme colors BreezeDark"
-reg theme desktop "List Plasma desktop themes, or set one" "[<theme>]" "fedora theme desktop breeze-dark"
-reg theme wallpaper "Set the wallpaper image" "<file>" "fedora theme wallpaper ~/Pictures/wall.png"
-reg theme accent "Set the accent color" "<name-or-hex>" "fedora theme accent skyblue"
-reg downgrade "" "Check out an older fedesk version" "<version>" "fedora downgrade 0.1.0"
-reg update "" "Upgrade packages with dnf" "[packages...]" "fedora update"
-reg upgrade "" "Check out the latest fedesk version, or a named one" "[version]" "fedora upgrade 0.1.0"
-reg version "" "Show the fedesk version, then Fedora and the desktop" "" "fedora version"
+reg capture screenshot "Save a screenshot" "[fullscreen|monitor|window|region] [-o file]" "fedesk capture screenshot monitor"
+reg capture record "Record the screen with Spectacle" "[screen|region|window]" "fedesk capture record screen"
+reg crash status "Show how many ABRT problems are stored" "" "fedesk crash status"
+reg crash list "List ABRT problems" "" "fedesk crash list"
+reg crash info "Show one ABRT problem" "<id>" "fedesk crash info <id>"
+reg crash cores "List systemd core dumps" "" "fedesk crash cores"
+reg debug "" "Print session, power, SELinux, firewall, and crash-handler facts" "" "fedesk debug"
+reg display list "List monitors" "" "fedesk display list"
+reg display set "Apply kscreen-doctor settings in one step" "<output.setting>..." "fedesk display set output.eDP-1.enable"
+reg firewall status "Show firewalld state and the default zone" "" "fedesk firewall status"
+reg font show "Show the Plasma general and fixed fonts" "" "fedesk font show"
+reg font set "Set the Plasma general font" "<font-string>" "fedesk font set 'Noto Sans,10,-1,5,50,0,0,0,0,0'"
+reg nightlight status "Show Night Light state" "" "fedesk nightlight status"
+reg nightlight on "Turn Night Light on" "" "fedesk nightlight on"
+reg nightlight off "Turn Night Light off" "" "fedesk nightlight off"
+reg pkg search "Search dnf packages" "<text>" "fedesk pkg search vim"
+reg pkg info "Show a dnf package" "<name>" "fedesk pkg info vim"
+reg pkg add "Install packages with dnf" "<pkg>..." "fedesk pkg add vim"
+reg pkg remove "Remove packages with dnf" "<pkg>..." "fedesk pkg remove vim"
+reg pkg flatpak "List Flatpak apps, or search them" "[search <text>]" "fedesk pkg flatpak search firefox"
+reg power status "Show the active tuned profile" "" "fedesk power status"
+reg power list "List tuned profiles" "" "fedesk power list"
+reg power recommend "Show the recommended tuned profile" "" "fedesk power recommend"
+reg power set "Switch the tuned profile" "<profile>" "fedesk power set balanced"
+reg selinux status "Show the SELinux mode" "" "fedesk selinux status"
+reg system lock "Lock the session" "" "fedesk system lock"
+reg system session "Show the desktop and session type" "" "fedesk system session"
+reg theme list "List Plasma global themes" "" "fedesk theme list"
+reg theme set "Apply a Plasma global theme" "<package>" "fedesk theme set org.kde.breezedark.desktop"
+reg theme colors "List color schemes, or set one" "[<scheme>]" "fedesk theme colors BreezeDark"
+reg theme desktop "List Plasma desktop themes, or set one" "[<theme>]" "fedesk theme desktop breeze-dark"
+reg theme wallpaper "Set the wallpaper image" "<file>" "fedesk theme wallpaper ~/Pictures/wall.png"
+reg theme accent "Set the accent color" "<name-or-hex>" "fedesk theme accent skyblue"
+reg downgrade "" "Check out an older fedesk version" "<version>" "fedesk downgrade 0.1.0"
+reg update "" "Upgrade packages with dnf" "[packages...]" "fedesk update"
+reg upgrade "" "Check out the latest fedesk version, or a named one" "[version]" "fedesk upgrade 0.1.0"
+reg version "" "Show the fedesk version, then Fedora and the desktop" "" "fedesk version"
 
 usage_of() {
   local i="$1"
-  local line="fedora ${C_GROUP[$i]}"
+  local line="fedesk ${C_GROUP[$i]}"
 
   [[ -n ${C_NAME[$i]} ]] && line+=" ${C_NAME[$i]}"
   [[ -n ${C_ARGS[$i]} ]] && line+=" ${C_ARGS[$i]}"
@@ -229,25 +229,25 @@ print_table() {
 show_main_help() {
   local group=""
   cat <<'EOF'
-Fedora command center
+fedesk command center
 
 Usage:
-  fedora <command> [args...]
-  fedora --ask "Turn Night Light off"
-  fedora commands [--json]
-  fedora <group>
-  fedora <group> <action> --help
+  fedesk <command> [args...]
+  fedesk --ask "Turn Night Light off"
+  fedesk commands [--json]
+  fedesk <group>
+  fedesk <group> <action> --help
 
 Common commands:
-  fedora theme list              List Plasma global themes
-  fedora theme set <package>     Apply a global theme
-  fedora capture screenshot      Save a screenshot
-  fedora display list            List monitors
-  fedora power status            Show the tuned profile
-  fedora version                 Show the fedesk version
-  fedora upgrade                 Move to the latest fedesk version
-  fedora update                  Upgrade packages
-  fedora system lock             Lock the session
+  fedesk theme list              List Plasma global themes
+  fedesk theme set <package>     Apply a global theme
+  fedesk capture screenshot      Save a screenshot
+  fedesk display list            List monitors
+  fedesk power status            Show the tuned profile
+  fedesk version                 Show the fedesk version
+  fedesk upgrade                 Move to the latest fedesk version
+  fedesk update                  Upgrade packages
+  fedesk system lock             Lock the session
 
 Groups:
 EOF
@@ -257,17 +257,17 @@ EOF
   cat <<'EOF'
 
 Discovery:
-  fedora commands            List all commands
-  fedora commands --json     Machine-readable command list
+  fedesk commands            List all commands
+  fedesk commands --json     Machine-readable command list
 
 --yes skips the confirmation prompt on theme set and power set, and passes
 -y to dnf for pkg add, pkg remove, and update.
 
 English:
-  fedora --ask "Turn Night Light off"
-  fedora -a "Lock the screen"
+  fedesk --ask "Turn Night Light off"
+  fedesk -a "Lock the screen"
   The model comes from FEDORA_PROVIDER or ~/.config/fedora/agent.conf.
-  fedora does not store an API key. Run 'fedora --ask --help'.
+  fedesk does not store an API key. Run 'fedesk --ask --help'.
 EOF
 }
 
@@ -303,7 +303,7 @@ show_command_help() {
 show_commands() {
   local i="" rows=""
 
-  echo "Fedora commands:"
+  echo "fedesk commands:"
   while IFS= read -r i; do
     [[ -n $i ]] || continue
     rows+="$(usage_of "$i")"$'\t'"${C_SUMMARY[$i]}"$'\n'
@@ -346,10 +346,10 @@ suggest_group() {
 
 unknown_command() {
   local suggestion=""
-  printf 'Unknown fedora command: fedora %s\n' "$*" >&2
+  printf 'Unknown fedesk command: fedesk %s\n' "$*" >&2
   suggestion="$(suggest_group "${1:-}")" || true
-  [[ -n $suggestion ]] && printf 'Did you mean: fedora %s ?\n' "$suggestion" >&2
-  printf "Run 'fedora commands' to list commands.\n" >&2
+  [[ -n $suggestion ]] && printf 'Did you mean: fedesk %s ?\n' "$suggestion" >&2
+  printf "Run 'fedesk commands' to list commands.\n" >&2
   exit 127
 }
 
@@ -396,7 +396,7 @@ cmd_capture_screenshot() {
   if [[ -z $output ]]; then
     dir="$(pictures_dir)"
     mkdir -p "$dir"
-    output="$dir/fedora-$(date +%Y%m%d-%H%M%S).png"
+    output="$dir/fedesk-$(date +%Y%m%d-%H%M%S).png"
   else
     mkdir -p "$(dirname -- "$output")"
   fi
@@ -412,7 +412,7 @@ cmd_capture_record() {
   screen | s) flag="s" ;;
   region | r) flag="r" ;;
   window | w) flag="w" ;;
-  *) die "Usage: fedora capture record [screen|region|window]" ;;
+  *) die "Usage: fedesk capture record [screen|region|window]" ;;
   esac
   exec spectacle -R "$flag"
 }
@@ -430,7 +430,7 @@ cmd_crash_list() {
 cmd_crash_info() {
   require_cmd abrt-cli
   local id="${1:-}"
-  [[ -n $id ]] || die "Usage: fedora crash info <id>"
+  [[ -n $id ]] || die "Usage: fedesk crash info <id>"
   abrt-cli info "$id"
 }
 
@@ -462,7 +462,7 @@ cmd_display_list() {
 cmd_display_set() {
   require_kde
   require_cmd kscreen-doctor
-  (( $# > 0 )) || die "Usage: fedora display set <output.setting>..."
+  (( $# > 0 )) || die "Usage: fedesk display set <output.setting>..."
   kscreen-doctor "$@"
 }
 
@@ -483,7 +483,7 @@ cmd_font_set() {
   require_kde
   require_cmd kwriteconfig6
   local value="${1:-}"
-  [[ -n $value ]] || die "Usage: fedora font set <font-string>"
+  [[ -n $value ]] || die "Usage: fedesk font set <font-string>"
   kwriteconfig6 --file kdeglobals --group General --key font "$value"
   cmd_font_show
 }
@@ -516,25 +516,25 @@ cmd_nightlight_write() {
 
 cmd_pkg_search() {
   require_cmd dnf
-  (( $# > 0 )) || die "Usage: fedora pkg search <text>"
+  (( $# > 0 )) || die "Usage: fedesk pkg search <text>"
   dnf search "$@"
 }
 
 cmd_pkg_info() {
   require_cmd dnf
-  (( $# > 0 )) || die "Usage: fedora pkg info <name>"
+  (( $# > 0 )) || die "Usage: fedesk pkg info <name>"
   dnf info "$@"
 }
 
 cmd_pkg_add() {
   require_cmd dnf
-  (( $# > 0 )) || die "Usage: fedora pkg add <pkg>..."
+  (( $# > 0 )) || die "Usage: fedesk pkg add <pkg>..."
   dnf_sudo install "$@"
 }
 
 cmd_pkg_remove() {
   require_cmd dnf
-  (( $# > 0 )) || die "Usage: fedora pkg remove <pkg>..."
+  (( $# > 0 )) || die "Usage: fedesk pkg remove <pkg>..."
   dnf_sudo remove "$@"
 }
 
@@ -542,12 +542,12 @@ cmd_pkg_flatpak() {
   require_cmd flatpak
   if [[ ${1:-} == search ]]; then
     shift
-    (( $# > 0 )) || die "Usage: fedora pkg flatpak search <text>"
+    (( $# > 0 )) || die "Usage: fedesk pkg flatpak search <text>"
     flatpak search "$@"
   elif (( $# == 0 )); then
     flatpak list
   else
-    die "Usage: fedora pkg flatpak [search <text>]"
+    die "Usage: fedesk pkg flatpak [search <text>]"
   fi
 }
 
@@ -569,7 +569,7 @@ cmd_power_recommend() {
 cmd_power_set() {
   require_cmd tuned-adm
   local profile="${1:-}"
-  [[ -n $profile ]] || die "Usage: fedora power set <profile>"
+  [[ -n $profile ]] || die "Usage: fedesk power set <profile>"
   confirm "Switch the tuned profile to $profile?" || die "Cancelled."
   sudo tuned-adm profile "$profile"
 }
@@ -600,7 +600,7 @@ cmd_theme_set() {
   require_kde
   require_cmd plasma-apply-lookandfeel
   local query="${1:-}" name=""
-  [[ -n $query ]] || die "Usage: fedora theme set <package>"
+  [[ -n $query ]] || die "Usage: fedesk theme set <package>"
   [[ -z ${2:-} ]] || die "Unexpected argument: $2"
   name="$(plasma-apply-lookandfeel --list | pick_name "$query")" || exit 1
   confirm "Apply global theme $name? This can change panels and widgets." || die "Cancelled."
@@ -635,7 +635,7 @@ cmd_theme_wallpaper() {
   require_kde
   require_cmd plasma-apply-wallpaperimage
   local file="${1:-}"
-  [[ -n $file ]] || die "Usage: fedora theme wallpaper <file>"
+  [[ -n $file ]] || die "Usage: fedesk theme wallpaper <file>"
   [[ -f $file ]] || die "Not a file: $file"
   plasma-apply-wallpaperimage "$file"
 }
@@ -644,7 +644,7 @@ cmd_theme_accent() {
   require_kde
   require_cmd plasma-apply-colorscheme
   local color="${1:-}"
-  [[ -n $color ]] || die "Usage: fedora theme accent <name-or-hex>"
+  [[ -n $color ]] || die "Usage: fedesk theme accent <name-or-hex>"
   plasma-apply-colorscheme --accent-color "$color"
 }
 
@@ -654,7 +654,7 @@ cmd_update() {
 }
 
 fedesk_root() {
-  dirname "$(fedora_bin_dir)"
+  dirname "$(fedesk_bin_dir)"
 }
 
 fedesk_version_label() {
@@ -723,7 +723,7 @@ cmd_upgrade() {
 
 cmd_downgrade() {
   local want="${1:-}"
-  [[ -n $want ]] || die "Usage: fedora downgrade <version>"
+  [[ -n $want ]] || die "Usage: fedesk downgrade <version>"
   fedesk_move "$want"
 }
 
@@ -742,7 +742,7 @@ cmd_version() {
   uname -sr
 }
 
-fedora_bin_dir() {
+fedesk_bin_dir() {
   local source="${BASH_SOURCE[0]}"
   local dir=""
   while [[ -L $source ]]; do
@@ -755,7 +755,7 @@ fedora_bin_dir() {
 
 run_ask() {
   local bin_dir=""
-  bin_dir="$(fedora_bin_dir)"
+  bin_dir="$(fedesk_bin_dir)"
   [[ -f $bin_dir/ask.py ]] || die "Missing $bin_dir/ask.py"
   exec python3 "$bin_dir/ask.py" "$@"
 }
@@ -790,10 +790,10 @@ main() {
         show_commands_json
         ;;
       --help | -h)
-        printf 'Usage:\n  fedora commands [--json]\n'
+        printf 'Usage:\n  fedesk commands [--json]\n'
         ;;
       *)
-        die "Unknown option for fedora commands: ${ARGS[1]}"
+        die "Unknown option for fedesk commands: ${ARGS[1]}"
         ;;
       esac
     else
@@ -828,9 +828,9 @@ main() {
   name="${ARGS[1]}"
   if ! command_index "$group" "$name" >/dev/null; then
     suggestion="$(suggest_group "$name")" || true
-    printf 'Unknown fedora command: fedora %s %s\n' "$group" "$name" >&2
-    [[ -n $suggestion ]] && printf 'Did you mean: fedora %s ?\n' "$suggestion" >&2
-    printf "Run 'fedora %s' to list commands in this group.\n" "$group" >&2
+    printf 'Unknown fedesk command: fedesk %s %s\n' "$group" "$name" >&2
+    [[ -n $suggestion ]] && printf 'Did you mean: fedesk %s ?\n' "$suggestion" >&2
+    printf "Run 'fedesk %s' to list commands in this group.\n" "$group" >&2
     exit 127
   fi
 

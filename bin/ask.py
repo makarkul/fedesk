@@ -2,7 +2,7 @@
 """Send one English sentence to the configured model.
 
 A skill is optional. The model answers in its own words and may run a
-fedora command or any other installed program. This file never stores an
+fedesk command or any other installed program. This file never stores an
 API key. A key is read from FEDORA_API_KEY only when the HTTP endpoint is
 not on localhost.
 """
@@ -18,11 +18,11 @@ import urllib.request
 
 MAX_ROUNDS = 6
 BIN_DIR = os.path.dirname(os.path.abspath(__file__))
-FEDORA = os.path.join(BIN_DIR, "fedora")
+FEDORA = os.path.join(BIN_DIR, "fedesk")
 CONFIG_PATH = os.path.expanduser("~/.config/fedora/agent.conf")
 
 SYSTEM = """You are the assistant for this Fedora machine. The user's sentence is the task.
-A skill is optional. Do the work even when no fedora command covers it.
+A skill is optional. Do the work even when no fedesk command covers it.
 
 Reply with any of these:
 - short explanation lines
@@ -30,12 +30,12 @@ Reply with any of these:
 - ASK: <one question, only when you cannot proceed>
 - DONE when the task is finished
 
-Prefer a fedora command from the list below when one fits.
+Prefer a fedesk command from the list below when one fits.
 Otherwise use the real installed program, such as nmcli, dnf, or kwriteconfig6.
 Look up a live name before you change it, in the same reply, as a RUN line.
 Never stop after only saying what you will do. A reply that takes an action must contain RUN.
 One command per RUN line. No pipes, redirects, command substitution, or --yes.
-"Turn the lights off" means Night Light: RUN: fedora nightlight off.
+"Turn the lights off" means Night Light: RUN: fedesk nightlight off.
 """
 
 
@@ -117,10 +117,10 @@ def command_list():
     groups = set()
     for line in out.splitlines():
         parts = line.split()
-        if len(parts) >= 2 and parts[0] == "fedora":
+        if len(parts) >= 2 and parts[0] == "fedesk":
             groups.add(parts[1])
     if not groups:
-        die("Could not read the fedora command list.")
+        die("Could not read the fedesk command list.")
     return out.strip(), groups
 
 
@@ -159,15 +159,15 @@ def shutil_which(name):
 
 def usage_text():
     return """Usage:
-  fedora --ask "Turn Night Light off"
-  fedora -a "Turn Night Light off"
+  fedesk --ask "Turn Night Light off"
+  fedesk -a "Turn Night Light off"
 
-The sentence is sent to one model. fedora does not have a built-in key.
+The sentence is sent to one model. fedesk does not have a built-in key.
 It reads ~/.config/fedora/env itself, then FEDORA_PROVIDER, then
 ~/.config/fedora/agent.conf. A variable already set in the shell wins.
 
   grok, claude, codex
-      Uses that program's existing login. No API key is read by fedora.
+      Uses that program's existing login. No API key is read by fedesk.
   ollama
       Local. No API key. Set FEDORA_MODEL to a model from `ollama list`.
   openai
@@ -177,10 +177,10 @@ It reads ~/.config/fedora/env itself, then FEDORA_PROVIDER, then
       FEDORA_API_KEY is required only when the host is not localhost.
 
 Examples:
-  FEDORA_PROVIDER=ollama FEDORA_MODEL=llama3.1 fedora --ask "Turn Night Light off"
+  FEDORA_PROVIDER=ollama FEDORA_MODEL=llama3.1 fedesk --ask "Turn Night Light off"
   FEDORA_PROVIDER=openai FEDORA_API_BASE=https://api.openai.com/v1 \\
-    FEDORA_MODEL=gpt-4.1-mini FEDORA_API_KEY=... fedora -a "Lock the screen"
-  FEDORA_PROVIDER=grok fedora -a "Turn Night Light off"
+    FEDORA_MODEL=gpt-4.1-mini FEDORA_API_KEY=... fedesk -a "Lock the screen"
+  FEDORA_PROVIDER=grok fedesk -a "Turn Night Light off"
 """
 
 
@@ -214,7 +214,7 @@ def command_argv(command, groups):
         raise Rejected(f"Refusing to run: {command} ({exc})") from exc
     if not argv:
         raise Rejected(f"Refusing to run: {command}")
-    if argv[0] == "fedora":
+    if argv[0] == "fedesk":
         if "--yes" in argv:
             raise Rejected("Refusing --yes from the model.")
         argv[0] = FEDORA
@@ -259,7 +259,7 @@ def chat_http(base, model, messages, tools=None):
     if not key and not local_base(base):
         die(
             "This endpoint is not local, so it needs FEDORA_API_KEY in the environment. "
-            "fedora does not store the key."
+            "fedesk does not store the key."
         )
     url = base.rstrip("/") + "/chat/completions"
     payload = {"model": model, "temperature": 0, "messages": messages}
@@ -361,7 +361,7 @@ def run_http(sentence, base, model, groups):
         "You are on the user's Fedora machine and you have the run_command tool. "
         "Call it for every lookup and every change. Do not tell the user to run a command. "
         "Do not stop after saying what you will do. "
-        "Prefer a fedora command when one fits. Otherwise use the installed program, such as nmcli. "
+        "Prefer a fedesk command when one fits. Otherwise use the installed program, such as nmcli. "
         "One command per call. No pipes, redirects, command substitution, or --yes.\n\n"
         "Commands:\n" + command_list()[0]
     )
@@ -464,14 +464,14 @@ def run_sentence(sentence, provider, base, model, groups):
 
 def self_test():
     groups = {"nightlight", "theme", "pkg", "version"}
-    argv = validate("fedora nightlight off", groups)
+    argv = validate("fedesk nightlight off", groups)
     assert argv[1:] == ["nightlight", "off"]
     assert argv[0] == FEDORA
     other = validate("nmcli connection show", groups)
     assert other == ["nmcli", "connection", "show"]
     for bad in (
-        "fedora nightlight off; rm -rf /",
-        "fedora theme set x --yes",
+        "fedesk nightlight off; rm -rf /",
+        "fedesk theme set x --yes",
         "nmcli -f NAME connection show | cat",
     ):
         try:
@@ -479,8 +479,8 @@ def self_test():
         except SystemExit:
             continue
         raise SystemExit(f"accepted bad command: {bad}")
-    runs, asks, done = parse("RUN: fedora nightlight off\nDONE\n")
-    assert runs == ["fedora nightlight off"] and done and not asks
+    runs, asks, done = parse("RUN: fedesk nightlight off\nDONE\n")
+    assert runs == ["fedesk nightlight off"] and done and not asks
     runs, asks, done = parse("I'll look it up.\nRun: nmcli connection show\n")
     assert runs == ["nmcli connection show"] and not done
     runs, asks, done = parse("ASK: Which display?\n")
